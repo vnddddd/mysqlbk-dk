@@ -1,0 +1,73 @@
+# 开发和测试用的Docker Compose配置
+# 包含一个测试MySQL数据库实例
+
+version: '3.8'
+
+services:
+  # 测试MySQL数据库
+  mysql-test:
+    image: mysql:8.0
+    container_name: mysql-test-db
+    environment:
+      MYSQL_ROOT_PASSWORD: testpassword
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: testpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+      - ./test-data:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # MySQL备份服务
+  mysql-backup:
+    build: .
+    container_name: mysql-backup-dev
+    depends_on:
+      mysql-test:
+        condition: service_healthy
+    environment:
+      # 连接到测试数据库（演示多连接格式）
+      # 单个连接格式
+      # - MYSQL_CONNECTIONS=mysql://testuser:testpass@mysql-test:3306/testdb
+
+      # 多数据库格式（同一服务器）
+      # - MYSQL_CONNECTIONS=mysql://testuser:testpass@mysql-test:3306/testdb,information_schema
+
+      # JSON格式（推荐用于多连接配置）
+      - MYSQL_CONNECTIONS=[{"name":"TestDB","connection":"mysql://testuser:testpass@mysql-test:3306/testdb","enabled":true}]
+      
+      # B2配置（需要在.env.dev中设置实际值）
+      - B2_APPLICATION_KEY_ID=${B2_APPLICATION_KEY_ID}
+      - B2_APPLICATION_KEY=${B2_APPLICATION_KEY}
+      - B2_BUCKET_NAME=${B2_BUCKET_NAME}
+      
+      # 开发配置
+      - BACKUP_SCHEDULE=*/5 * * * *  # 每5分钟备份一次（仅用于测试）
+      - RETENTION_DAYS=1
+      - HEALTH_CHECK_PORT=8080
+      - RUN_INITIAL_BACKUP=true
+      - LOG_LEVEL=DEBUG
+    
+    ports:
+      - "8080:8080"
+    
+    volumes:
+      - ./logs:/var/log
+      # 开发时挂载源代码（可选）
+      # - ./src:/app/src
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  mysql_test_data:
