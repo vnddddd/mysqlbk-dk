@@ -235,21 +235,19 @@ MYSQL_CONNECTIONS='[
 
 1. **Fork此仓库到你的GitHub账户**
 
-2. **在GitHub仓库设置中添加Secrets**：
-   - 进入仓库 Settings → Secrets and variables → Actions
-   - 添加以下secrets：
+2. **设置Docker Hub凭据**（可选，但推荐）：
+   - 在Docker Hub创建访问令牌
+   - 在GitHub仓库设置中添加Secrets：
      - `DOCKERHUB_USERNAME`: 你的Docker Hub用户名
-     - `DOCKERHUB_TOKEN`: 你的Docker Hub访问令牌（在Docker Hub生成）
+     - `DOCKERHUB_TOKEN`: 你的Docker Hub访问令牌
+   - 详细步骤请参考 [GitHub Actions设置指南](GITHUB_ACTIONS_SETUP.md)
 
-3. **修改镜像名称**：
-   - 编辑 `.github/workflows/docker-build.yml`
-   - 将 `IMAGE_NAME` 改为你想要的镜像名称
-   - 确保 `${{ secrets.DOCKERHUB_USERNAME }}` 指向正确的用户名
-
-4. **推送代码或创建标签**：
-   - 推送到`main`分支会自动构建`latest`标签
+3. **推送代码或创建标签**：
+   - 推送到`main`分支会自动构建和推送`latest`标签（如果有凭据）
    - 创建版本标签（如`v1.0.0`）会构建对应版本标签
-   - Pull Request会构建测试镜像但不推送
+   - Pull Request只会构建测试，不会推送
+
+**注意**: 即使没有Docker Hub凭据，GitHub Actions也会成功构建镜像进行测试，只是不会推送到Docker Hub。
 
 ### 使用预构建镜像
 
