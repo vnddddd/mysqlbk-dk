@@ -65,24 +65,25 @@ class BackupScheduler:
     def _parse_cron_to_schedule(self, cron_expression: str) -> str:
         """
         将cron表达式转换为schedule库可用的格式
-        
+
         Args:
             cron_expression: Cron表达式 (分 时 日 月 周)
-            
+
         Returns:
             str: schedule时间格式
         """
         parts = cron_expression.split()
         if len(parts) != 5:
             raise ValueError("Cron表达式必须包含5个部分: 分 时 日 月 周")
-        
+
         minute, hour, day, month, weekday = parts
-        
+
         # 简单的cron解析，支持基本格式
         if minute == "0" and hour != "*" and day == "*" and month == "*" and weekday == "*":
-            # 每天特定时间
-            return f"{hour}:00"
-        
+            # 每天特定时间，确保小时是两位数格式
+            hour_int = int(hour)
+            return f"{hour_int:02d}:00"
+
         # 更复杂的cron表达式需要使用croniter
         return None
     

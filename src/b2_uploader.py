@@ -46,59 +46,60 @@ class B2Uploader:
     def upload_file(self, file_path: str, remote_filename: str) -> bool:
         """
         上传文件到B2存储桶
-        
+
         Args:
             file_path: 本地文件路径
             remote_filename: 远程文件名
-            
+
         Returns:
             bool: 上传是否成功
         """
         try:
             self._initialize_api()
-            
+
             if not os.path.exists(file_path):
                 logger.error(f"文件不存在: {file_path}")
                 return False
-            
+
             file_size = os.path.getsize(file_path)
             logger.info(f"开始上传文件: {file_path} -> {remote_filename} ({file_size} bytes)")
-            
-            with open(file_path, 'rb') as file_data:
-                file_info = self.bucket.upload(
-                    file_data,
-                    remote_filename,
-                    content_type='application/gzip'
-                )
-            
+
+            # 使用upload_local_file方法，这是推荐的上传本地文件的方式
+            file_info = self.bucket.upload_local_file(
+                local_file=file_path,
+                file_name=remote_filename,
+                content_type='application/gzip'
+            )
+
             logger.info(f"文件上传成功: {remote_filename} (ID: {file_info.id_})")
             return True
-            
+
         except Exception as e:
             logger.error(f"上传文件失败: {str(e)}")
             return False
     
-    def list_backup_files(self, prefix: str = "backup_") -> List[FileVersion]:
+    def list_backup_files(self, prefix: str = "mysql-backups/backup_") -> List[FileVersion]:
         """
         列出存储桶中的备份文件
-        
+
         Args:
-            prefix: 文件名前缀
-            
+            prefix: 文件名前缀，默认为mysql-backups目录下的backup_文件
+
         Returns:
             List[FileVersion]: 文件版本列表
         """
         try:
             self._initialize_api()
-            
+
             files = []
-            for file_version, _ in self.bucket.ls(folder_to_list="", recursive=True):
+            # 列出mysql-backups目录下的文件
+            for file_version, _ in self.bucket.ls(folder_to_list="mysql-backups", recursive=True):
                 if file_version.file_name.startswith(prefix):
                     files.append(file_version)
-            
+
             logger.info(f"找到 {len(files)} 个备份文件")
             return files
-            
+
         except Exception as e:
             logger.error(f"列出文件失败: {str(e)}")
             return []

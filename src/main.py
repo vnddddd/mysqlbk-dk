@@ -189,14 +189,9 @@ class MySQLBackupService:
                         group_result['total_size'] += file_size
                         results['total_size'] += file_size
 
-                        # 生成带组名的远程文件名
+                        # 生成远程文件名：保持原始文件名，上传到mysql-backups目录
                         original_filename = os.path.basename(backup_file)
-                        # 格式: backup_[group]_[database]_[timestamp].sql.gz
-                        name_parts = original_filename.split('_')
-                        if len(name_parts) >= 3:
-                            remote_filename = f"backup_{group_name}_{name_parts[1]}_{name_parts[2]}"
-                        else:
-                            remote_filename = f"backup_{group_name}_{original_filename}"
+                        remote_filename = f"mysql-backups/{original_filename}"
 
                         # 上传到B2
                         if self.b2_uploader.upload_file(backup_file, remote_filename):
