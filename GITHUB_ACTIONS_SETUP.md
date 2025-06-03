@@ -98,6 +98,7 @@ tags: |
 #### 1. "Username and password required"
 **原因**: 缺少Docker Hub凭据
 **解决**: 确保已添加 `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN` secrets
+**注意**: 新版本的工作流会自动跳过推送步骤如果没有凭据
 
 #### 2. "denied: requested access to the resource is denied"
 **原因**: Docker Hub权限不足或用户名错误
